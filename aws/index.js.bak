@@ -1,0 +1,15 @@
+'use strict';
+ 
+module.exports.handler = (event, context, callback) => {
+    const response = {
+        statusCode: 200,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+        },
+        body: JSON.stringify({
+            result: 'name=LICENSE-KONKUK-TEST windows_endpoint_1_host=vdi-client-windows-1.nerd.kim windows_endpoint_1_port=3389 windows_endpoint_2_host=vdi-client-windows-2.nerd.kim windows_endpoint_2_port=3393 windows_username=Administrator windows_password=VDIProject!@1234 linux_endpoint_1_host=vdi-client-linux-1.nerd.kim linux_endpoint_1_port=3389 linux_endpoint_2_host=vdi-client-linux-2.nerd.kim linux_endpoint_2_port=3394 linux_username=root linux_password=VDIProject!@1234 ',
+        }),
+    };
+
+    callback(null, response);
+};

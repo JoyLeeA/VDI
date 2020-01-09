@@ -1,0 +1,16 @@
+service: vdi-license-server
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  stage: 'production'
+  region: 'ap-northeast-2'
+
+functions:
+  helloWorld:
+    handler: index.handler
+    events:
+      - http:
+          path: license
+          method: get
+          # cors: true

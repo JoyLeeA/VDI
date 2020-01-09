@@ -1,0 +1,18 @@
+version: 0.2
+  
+phases:
+  install:
+    run-as: root
+    commands:
+      - cd ./aws/
+      - apt-get update -y
+      - apt-get install -y nodejs awscli
+      - npm install -g serverless
+      - npm install
+      - serverless config credentials --provider aws --key $AWS_KEY --secret $AWS_SECRET
+      - export SLS_DEBUG=*
+
+  build: 
+    run-as: root
+    commands: 
+      - serverless deploy --verbose
