@@ -1,0 +1,49 @@
+#!/bin/bash
+
+
+### Are you a root user?
+if [[ $EUID -ne 0 ]]; then
+	echo "[SYSTEM]You must be a root user." 2>&1
+	exit 1
+fi
+
+
+### Is network connection ok?
+while true; do
+	echo -e "GET http://google.com HTTP/1.0\n\n" | nc google.com 80 > /dev/null 2>&1
+
+	if [ $? -eq 0 ]; then
+		break
+	else
+		echo "[SYSTEM]We could not verify your internet connection. Try again in 5 seconds." && wait
+		sleep 5 && wait
+	fi
+done
+echo "[SYSTEM]Internet connection is verified!" && wait
+
+
+# Update repository endpoint
+sed -i 's|raspbian.raspberrypi.org|ftp.kaist.ac.kr\/raspbian|g' /etc/apt/sources.list && wait
+
+
+# Install dependencies(for RDP client)
+apt-get install -y ninja-build build-essential git-core debhelper cdbs dpkg-dev autotools-dev cmake pkg-config xmlto libssl-dev docbook-xsl xsltproc libxkbfile-dev libx11-dev libwayland-dev libxrandr-dev libxi-dev libxrender-dev libxext-dev libxinerama-dev libxfixes-dev libxcursor-dev libxv-dev libxdamage-dev libxtst-dev libcups2-dev libpcsclite-dev libasound2-dev libpulse-dev libjpeg-dev libgsm1-dev libusb-1.0-0-dev libudev-dev libdbus-glib-1-dev uuid-dev libxml2-dev libgstreamer1.0-dev libgstreamer0.10-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-base0.10-dev libavutil-dev libavcodec-dev libavresample-dev libcunit1-dev libdirectfb-dev xmlto doxygen libxtst-dev libcairo2-dev libfaad-dev
+
+
+# Install dependencies(for TEST)
+apt-get install wget vim htop git nmap ifstat iftop software-properties-common && wait
+
+
+# Install RDP client
+git clone git://github.com/FreeRDP/FreeRDP.git
+cd FreeRDP
+ln -s packaging/deb/freerdp-nightly debian
+dpkg-buildpackage
+git clean -xdf
+cmake -GNinja -DCHANNEL_URBDRC=ON -DWITH_DSP_FFMPEG=ON -DWITH_CUPS=ON -DWITH_PULSE=ON -DWITH_FAAC=OFF -DWITH_FAAD2=ON -DWITH_GSM=ON .
+cmake --build .
+cmake --build . --target install
+
+
+# AutoStart
+# /home/pi/.config/lxsession/LXDE-pi/autostart
