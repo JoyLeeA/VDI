@@ -1,0 +1,12 @@
+pyasn1!=0.2.3,>=0.1.8
+pyOpenSSL>=17.1.0
+ndg-httpsclient>=0.4.2
+netaddr>=0.7.18
+PrettyTable<0.8,>=0.7.1
+python-memcached>=1.56
+PyYAML>=3.12
+virtualenv>=14.0.6
+python-keystoneclient>=3.8.0
+python-openstackclient>=3.14.2
+shade>=1.17.0
+jmespath>=0.9.3

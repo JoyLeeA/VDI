@@ -1,0 +1,40 @@
+# This file facilitates OpenStack-CI package installation
+# before the execution of any tests.
+#
+# See the following for details:
+#  - https://docs.openstack.org/infra/bindep/
+#  - https://git.openstack.org/cgit/openstack-infra/bindep
+#
+# Even if the role does not make use of this facility, it
+# is better to have this file empty, otherwise OpenStack-CI
+# will fall back to installing its default packages which
+# will potentially be detrimental to the tests executed.
+
+# The gcc compiler
+gcc
+
+# Base requirements for Ubuntu
+git-core          [platform:dpkg]
+libssl-dev        [platform:dpkg]
+libffi-dev        [platform:dpkg]
+python2.7         [platform:dpkg]
+python-apt        [platform:dpkg]
+python-dev        [platform:dpkg]
+python3           [platform:dpkg]
+python3-apt       [platform:dpkg]
+python3-dev       [platform:dpkg]
+
+# Base requirements for RPM distros
+gcc-c++           [platform:rpm]
+git               [platform:rpm]
+libffi-devel      [platform:rpm]
+openssl-devel     [platform:rpm]
+python-devel      [platform:rpm]
+python2-dnf       [platform:fedora]
+
+# For SELinux
+libselinux-python [platform:redhat]
+libsemanage-python [platform:redhat]
+
+# Required for compressing collected log files in CI
+gzip

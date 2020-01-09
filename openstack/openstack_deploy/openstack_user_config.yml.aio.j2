@@ -1,0 +1,131 @@
+---
+cidr_networks:
+{% if 'trove' in bootstrap_host_services %}
+  dbaas: 172.29.232.0/22
+{% endif %}
+{% if 'octavia' in bootstrap_host_services %}
+  lbaas: 172.29.252.0/22
+{% endif %}
+  container: 172.29.236.0/22
+  tunnel: 172.29.240.0/22
+  storage: 172.29.244.0/22
+
+used_ips:
+{% if 'trove' in bootstrap_host_services %}
+  - "172.29.232.1,172.29.232.50"
+  - "172.29.232.100"
+{% endif %}
+{% if 'octavia' in bootstrap_host_services %}
+  - "172.29.252.1,172.29.252.50"
+  - "172.29.252.100"
+{% endif %}
+  - "172.29.236.1,172.29.236.50"
+  - "172.29.236.100"
+  - "172.29.240.1,172.29.240.50"
+  - "172.29.240.100"
+  - "172.29.244.1,172.29.244.50"
+  - "172.29.244.100"
+  - "172.29.248.1,172.29.248.50"
+  - "172.29.248.100"
+
+global_overrides:
+  internal_lb_vip_address: 172.29.236.100
+  # The external IP is quoted simply to ensure that the .aio file can be used as input
+  # dynamic inventory testing.
+  external_lb_vip_address: "{{ bootstrap_host_public_address | default(ansible_default_ipv4.address) }}"
+  management_bridge: "br-mgmt"
+  provider_networks:
+    - network:
+        container_bridge: "br-mgmt"
+        container_type: "veth"
+        container_interface: "eth1"
+        ip_from_q: "container"
+        type: "raw"
+        group_binds:
+          - all_containers
+          - hosts
+        is_container_address: true
+    - network:
+        container_bridge: "br-vxlan"
+        container_type: "veth"
+        container_interface: "eth10"
+        ip_from_q: "tunnel"
+        type: "vxlan"
+        range: "1:1000"
+        net_name: "vxlan"
+        group_binds:
+          - neutron_linuxbridge_agent
+{% if 'trove' in bootstrap_host_services %}
+    - network:
+        container_bridge: "br-dbaas"
+        container_type: "veth"
+        container_interface: "eth13"
+        host_bind_override: "eth13"
+        ip_from_q: "dbaas"
+        type: "flat"
+        net_name: "flat-db"
+        group_binds:
+          - neutron_linuxbridge_agent
+          - rabbitmq
+{% endif %}
+{% if 'octavia' in bootstrap_host_services %}
+    - network:
+        container_bridge: "br-lbaas"
+        container_type: "veth"
+        container_interface: "eth14"
+        host_bind_override: "eth14"
+        ip_from_q: "lbaas"
+        type: "flat"
+        net_name: "lbaas"
+        group_binds:
+          - neutron_linuxbridge_agent
+          - octavia-worker
+          - octavia-housekeeping
+          - octavia-health-manager
+{% endif %}
+    - network:
+        container_bridge: "br-vlan"
+        container_type: "veth"
+        container_interface: "eth12"
+        host_bind_override: "eth12"
+        type: "flat"
+        net_name: "flat"
+        group_binds:
+          - neutron_linuxbridge_agent
+    - network:
+        container_bridge: "br-vlan"
+        container_type: "veth"
+        container_interface: "eth11"
+        type: "vlan"
+        range: "101:200,301:400"
+        net_name: "vlan"
+        group_binds:
+          - neutron_linuxbridge_agent
+    - network:
+        container_bridge: "br-storage"
+        container_type: "veth"
+        container_interface: "eth2"
+        ip_from_q: "storage"
+        type: "raw"
+        group_binds:
+          - glance_api
+          - cinder_api
+          - cinder_volume
+          - nova_compute
+          - swift_proxy
+
+# galera, memcache, rabbitmq, utility
+shared-infra_hosts:
+  aio1:
+    ip: 172.29.236.100
+    container_vars:
+      # Optional | container_tech for a target host, default is "lxc".
+      container_tech: "{{ bootstrap_host_container_tech }}"
+
+repo-infra_hosts:
+  aio1:
+{% if bootstrap_host_install_method == 'distro' %}
+    affinity:
+      repo_container: 0
+{% endif %}
+    ip: 172.29.236.100

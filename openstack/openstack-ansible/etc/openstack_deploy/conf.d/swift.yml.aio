@@ -1,0 +1,33 @@
+---
+global_overrides:
+  swift:
+    part_power: 8
+    storage_network: "{{ (container_tech != 'nspawn') | ternary('br-storage', ansible_default_ipv4['alias']) }}"
+    replication_network: "{{ (container_tech != 'nspawn') | ternary('br-storage', ansible_default_ipv4['alias']) }}"
+    drives:
+      - name: swift1.img
+      - name: swift2.img
+      - name: swift3.img
+    mount_point: /srv
+    storage_policies:
+      - policy:
+          name: default
+          index: 0
+          default: True
+swift-proxy_hosts:
+  aio1:
+    ip: 172.29.236.100
+    container_vars:
+      swift_proxy_vars:
+        limit_container_types: swift_proxy
+        read_affinity: "r1=100"
+        write_affinity: "r1"
+        write_affinity_node_count: "1 * replicas"
+swift_hosts:
+  aio1:
+    ip: 172.29.236.100
+    container_vars:
+      swift_vars:
+        limit_container_types: swift
+        zone: 0
+        region: 1

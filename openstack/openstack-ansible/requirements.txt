@@ -1,0 +1,29 @@
+# The order of packages is significant, because pip processes them in the order
+# of appearance. Changing the order has an impact on the overall integration
+# process, which may cause wedges in the gate later.
+pyasn1!=0.2.3,>=0.1.8 # BSD
+pyOpenSSL>=17.1.0 # Apache-2.0
+ndg-httpsclient>=0.4.2;python_version<'3.0' # BSD
+netaddr>=0.7.18 # BSD
+PrettyTable<0.8,>=0.7.1 # BSD
+python-memcached>=1.56 # PSF
+PyYAML>=3.12 # MIT
+virtualenv>=14.0.6 # MIT
+
+# We use this for our own keystone module.
+# TODO(odyssey4me): Remove this once we no
+# longer use our own keystone module.
+python-keystoneclient>=3.8.0  # Apache-2.0
+
+# We use this for the octavia role to be able
+# to upload a tagged image.
+# Remove this once Ansible can do this with
+# modules instead.
+python-openstackclient>=3.14.2
+
+# We use this for the Ansible openstack
+# modules.
+shade>=1.17.0 # Apache-2.0
+
+# We use this for the json_query filter
+jmespath>=0.9.3 # MIT
