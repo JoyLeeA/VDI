@@ -1,0 +1,114 @@
+#!/bin/bash
+
+
+# Check internet connection
+while true; do
+    echo -e "GET http://google.com HTTP/1.0\n\n" | nc google.com 80 > /dev/null 2>&1
+
+    if [ $? -eq 0 ]; then
+        break
+    else
+        echo "[SYSTEM]We could not verify your internet connection. Try again in 1 seconds." && wait
+        sleep 1 && wait
+    fi
+done
+
+echo "[SYSTEM]Internet connection has been verified!" && wait
+
+
+# Config for application
+if [ ! -f "/home/pi/client/modules/.config" ]; then
+
+    # Check company license
+    while true; do
+        printf "# Input your license key : " && wait
+        read code && wait
+
+        license_result=$(curl -s "https://9nwcq9gplk.execute-api.ap-northeast-2.amazonaws.com/production/license/?code=$code" | jq -r '.result') && wait
+
+        if [ -z "$license_result" ]; then
+            printf "[INFO]No license found.\n" && wait
+        else
+            break && wait
+        fi
+    done
+
+    touch /home/pi/client/modules/.config && wait
+    echo -e $license_result > /home/pi/client/modules/.config && wait
+
+
+    # Select ThinClient's OS
+    printf "# Select your OS - [W]indows / [L]inux : " && wait
+    read temp_os && wait
+
+    if [ "$temp_os" == "W" -o "$temp_os" == "w" ]; then
+        select_os="select_os=windows" && wait
+
+    elif [ "$temp_os" == "L" -o "$temp_os" == "l" ]; then
+        select_os="select_os=linux" && wait
+
+    fi
+
+    echo -e $select_os >> /home/pi/client/modules/.config && wait
+
+
+    # Rebooting system
+    printf "[SYSTEM]Rebooting system(after 5 seconds).\n" && wait
+    sleep 5 && wait
+
+    reboot
+
+else
+
+
+    # Get our config file
+    . /home/pi/client/modules/.config && wait
+
+
+    # Check where we connect to
+    if [ "$select_os" == "windows" ]; then
+
+        check_connection=$(nc -z -v -w5 $windows_endpoint_1_host $windows_endpoint_1_port 2>&1 | grep succeeded) && wait
+
+        if [ ! -z "$check_connection" ]; then
+            printf "[SYSTEM]We will connect to windows_endpoint_1 .\n" && wait
+            __final_host=$windows_endpoint_1_host && wait
+            __final_port=$windows_endpoint_1_port && wait
+        else
+            printf "[SYSTEM]We will connect to windows_endpoint_2 .\n" && wait
+            __final_host=$windows_endpoint_2_host && wait
+            __final_port=$windows_endpoint_2_port && wait
+        fi
+
+        __final_username=$windows_username && wait
+        __final_password=$windows_password && wait
+
+
+    elif [ "$select_os" == "linux" ]; then
+
+        check_connection=$(nc -z -v -w5 $linux_endpoint_1_host $linux_endpoint_1_port 2>&1 | grep succeeded) && wait
+
+        if [ ! -z "$check_connection" ]; then
+            printf "[SYSTEM]We will connect to linux_endpoint_1 .\n" && wait
+            __final_host=$linux_endpoint_1_host && wait
+            __final_port=$linux_endpoint_1_port && wait
+        else
+            printf "[SYSTEM]We will connect to linux_endpoint_2 .\n" && wait
+            __final_host=$linux_endpoint_2_host && wait
+            __final_port=$linux_endpoint_2_port && wait
+        fi
+
+        __final_username=$linux_username && wait
+        __final_password=$linux_password && wait
+
+    fi
+
+
+    # Start RDP application
+    echo 'Y' | rdesktop -u"$__final_username" -p"$__final_password" -f -r'sound:local' -r'disk:USB=/media/usb0' -k'ko' $__final_host:$__final_port && wait
+
+
+    # Shutdown client
+    shutdown -P now && wait
+
+fi

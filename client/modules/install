@@ -1,0 +1,46 @@
+#!/bin/bash
+
+
+### Are you a root user? 
+if [[ $EUID -ne 0 ]]; then
+    echo "[SYSTEM]You must be a root user." 2>&1
+    exit 1
+fi
+
+
+### Is network connection ok?
+while true; do
+    echo -e "GET http://google.com HTTP/1.0\n\n" | nc google.com 80 > /dev/null 2>&1
+
+    if [ $? -eq 0 ]; then
+        break
+    else
+        echo "[SYSTEM]We could not verify your internet connection. Try again in 5 seconds." && wait
+        sleep 5 && wait
+    fi
+done
+
+echo "[SYSTEM]Internet connection is verified!" && wait
+
+
+# Install dependencies
+apt-get install -y jq wget vim htop git nmap ifstat iftop software-properties-common && wait
+
+
+# Install RDP client
+apt install -y rdesktop && wait
+
+
+# Setup disable power management
+echo -e "xserver-command=X -s 0 dpms" >> /etc/lightdm/lightdm.conf && wait
+
+
+# Setup autostart start application
+rm -rf /home/pi/.config/lxsession/LXDE-pi/autostart && wait
+cp -rf /home/pi/client/modules/autostart-after-install /home/pi/.config/lxsession/LXDE-pi/autostart && wait
+
+
+# Install Complete, reboot
+echo '[SYSTEM]Rebooting system(after 5 seconds).' && wait
+sleep 5 && wait
+reboot
